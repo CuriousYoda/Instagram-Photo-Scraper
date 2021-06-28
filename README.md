@@ -19,7 +19,7 @@ Scrape Instagram photos of a given user
 - Support for downloads without login (Unauthroized calls has a limitation on number of calls). We need to include a solution which supports proxies, commercial or otherwise
 
 
-Copyright (c) [2021] [@CuriousYoda]
+Copyright (c) [2021] [[@CuriousYoda](https://twitter.com/CuriousYoda)]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
