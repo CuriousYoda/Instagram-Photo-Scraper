@@ -1,6 +1,6 @@
 # Instagram-Photo-Scraper
 
-Scrape Instagram photos of a given user
+Scrape/Crawl Instagram photos of a given user
 
 ## Features
 - Takes a Instagram user name and downloads X photos starting from most recent ones
@@ -10,6 +10,7 @@ Scrape Instagram photos of a given user
 - You need a instagram user name and password. We propose to create a new account for this purpose to avoid any restrictions on your main account.
 - Once you have your instagram user name and password, set them up in the "insta-scraper.properties" and save the property file.
 - Run the insta-scraper.exe either by double clicking or by opening CMD prompt
+- Photos will be downloaded to a folder at ../Instagram/[USERNAME] 
 
 ## Development & Packaging
 - TBA
