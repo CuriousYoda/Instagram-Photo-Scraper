@@ -4,21 +4,27 @@ Scrape/Crawl Instagram photos of a given user
 
 ## Features
 - Takes a Instagram user name and downloads X photos starting from most recent ones
-- You can define how many photos to be downloaded
+  - You can define how many photos to be downloaded
+- Takes a Instagram Hash Tag and downloads the top photos or X photos posted recently
+- Works with few different run types
+  - Run_TYPE 1 - Works with authenticated calls. You need a instagram user name and password for this
+  - RUN_TYPE 2 - Through Proxy (currently not supported)
+  - RUN_TYPE 3 - Without login, and through regular internet connection. We recommend this one. However, your IP might be blocked by instagram if you download heavily. So be polite
 
 ## How to use
-- You need a instagram user name and password. We propose to create a new account for this purpose to avoid any restrictions on your main account.
-- Once you have your instagram user name and password, set them up in the "insta-scraper.properties" and save the property file.
-- Run the insta-scraper.exe either by double clicking or by opening CMD prompt
-- Photos will be downloaded to a folder at ../Instagram/[USERNAME] 
+- Set up the RUN TYPE in the properties file.
+- If you use RUN TYPE 1
+  - Set up your instagram user name and password in the properties file.
+- Set up the folder path to download images in the properties file
+- Run the insta-scraper.exe either by double clicking or by opening CMD prompt and typing "insta-scraper.exe"
+- Photos will be downloaded to the folder you specified. User photos will be saved to a folder name with User Full Name and Hashtag photos to a folder named with that hashtag
 
 ## Development & Packaging
 - TBA
 
 ## Next Steps
-- Support for downloads by Tags
-- Support for downloads without login (Unauthroized calls has a limitation on number of calls). We need to include a solution which supports proxies, commercial or otherwise
-
+- Start downloading photos for users from a given starting point (not from the beginning)
+- Support for proxy solution
 
 Copyright (c) [2021] [[@CuriousYoda](https://twitter.com/CuriousYoda)]
 
