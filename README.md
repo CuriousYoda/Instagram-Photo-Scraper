@@ -1,6 +1,6 @@
 # Instagram-Photo-Scraper
 
-Scrape/Crawl Instagram photos of a given user
+Downloads most recent images for a username or hashtag. Be polite with # number of downloads, don't to overuse so that Instagram removes their open APIs (again) or restrict your IP. 
 
 ## Features
 - Takes a Instagram user name and downloads X photos starting from most recent ones
