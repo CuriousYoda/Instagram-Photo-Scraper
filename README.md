@@ -8,7 +8,7 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
 - Takes a Instagram Hash Tag and downloads the top photos or X photos posted recently
 - Works with few different run types
   - Run_TYPE 1 - Works with authenticated calls. You need a instagram user name and password for this. Be polite, otherwise Instagram will restrict your account. 
-  - RUN_TYPE 2 - Through Proxy (temporarly not supported)
+  - RUN_TYPE 2 - Through Proxy (temporarily not supported)
   - RUN_TYPE 3 - Without login, and through regular internet connection. We recommend this one. However, be polite with your downloads, otherwise your IP might be blocked by Instagram.
 
 ## How to use
