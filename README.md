@@ -1,18 +1,18 @@
 # Instagram-Photo-Scraper
 
-Downloads most recent images for a username or hashtag. Be polite with # number of downloads, don't to overuse so that Instagram removes their open APIs (again) or restrict your IP. 
+Downloads most recent images for a username or hashtag. Be polite with # number of downloads, don't to overuse so that Instagram removes/changes their open APIs (again) or restrict your IP. 
 
 ## Features
 - Takes a Instagram user name and downloads X photos starting from most recent ones
   - You can define how many photos to be downloaded
 - Takes a Instagram Hash Tag and downloads the top photos or X photos posted recently
 - Works with few different run types
-  - Run_TYPE 1 - Works with authenticated calls. You need a instagram user name and password for this
-  - RUN_TYPE 2 - Through Proxy (currently not supported)
-  - RUN_TYPE 3 - Without login, and through regular internet connection. We recommend this one. However, your IP might be blocked by instagram if you download heavily. So be polite
+  - Run_TYPE 1 - Works with authenticated calls. You need a instagram user name and password for this. Be polite, otherwise Instagram will restrict your account. 
+  - RUN_TYPE 2 - Through Proxy (temporarly not supported)
+  - RUN_TYPE 3 - Without login, and through regular internet connection. We recommend this one. However, be polite with your downloads, otherwise your IP might be blocked by Instagram.
 
 ## How to use
-- Set up the RUN TYPE in the properties file.
+- Set up the RUN TYPE in the properties file. Default is RUN TYPE 3, which requires no user name or password for Instagram
 - If you use RUN TYPE 1
   - Set up your instagram user name and password in the properties file.
 - Set up the folder path to download images in the properties file
@@ -23,7 +23,6 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
 - TBA ( Code is not open as of now)
 
 ## Next Steps
-- Start downloading photos for users from a given starting point (not from the beginning)
 - Support for proxy solution
 
 Copyright (c) [2021] [[@CuriousYoda](https://twitter.com/CuriousYoda)]
