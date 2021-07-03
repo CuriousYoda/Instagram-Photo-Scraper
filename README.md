@@ -12,6 +12,7 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
   - RUN_TYPE 3 - Without login, and through regular internet connection. We recommend this one. However, be polite with your downloads, otherwise your IP might be blocked by Instagram.
 
 ## How to use
+- Download the project as a zip file (it's around 11MB), unzip and go into the folder.
 - Set up the RUN TYPE in the properties file. Default is RUN TYPE 3, which requires no user name or password for Instagram
 - If you use RUN TYPE 1
   - Set up your instagram user name and password in the properties file.
