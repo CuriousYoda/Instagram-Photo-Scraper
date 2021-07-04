@@ -21,7 +21,7 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
 - Photos will be downloaded to the folder you specified. User photos will be saved to a folder name with User Full Name and Hashtag photos to a folder named with that hashtag
 
 ## Development & Packaging
-- TBA ( Code is not open as of now)
+- PyInstaller is used to package the exe file
 
 ## Next Steps
 - Support for proxy solution
