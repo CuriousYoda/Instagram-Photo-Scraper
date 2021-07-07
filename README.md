@@ -28,7 +28,8 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
 
 ## Screenshots
 Downloading recent images for a hashtag
-![image](https://user-images.githubusercontent.com/86459866/124739443-7ee40480-df37-11eb-86d2-e435897e6280.png)
+![image](https://user-images.githubusercontent.com/86459866/124739618-a9ce5880-df37-11eb-96ce-8fb8c9420067.png)
+
 
 
 
