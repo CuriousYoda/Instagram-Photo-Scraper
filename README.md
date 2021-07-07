@@ -28,7 +28,8 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
 
 ## Screenshots
 Downloading recent images for a hashtag
-![image](https://user-images.githubusercontent.com/86459866/124739358-65db5380-df37-11eb-8d83-a1317a9b3a6e.png)
+![image](https://user-images.githubusercontent.com/86459866/124739443-7ee40480-df37-11eb-86d2-e435897e6280.png)
+
 
 
 Copyright (c) [2021] [[@CuriousYoda](https://twitter.com/CuriousYoda)]
