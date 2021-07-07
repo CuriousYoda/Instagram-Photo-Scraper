@@ -26,6 +26,11 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
 ## Next Steps
 - Support for proxy solution
 
+## Screenshots
+Downloading recent images for a hashtag
+![image](https://user-images.githubusercontent.com/86459866/124739358-65db5380-df37-11eb-8d83-a1317a9b3a6e.png)
+
+
 Copyright (c) [2021] [[@CuriousYoda](https://twitter.com/CuriousYoda)]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
