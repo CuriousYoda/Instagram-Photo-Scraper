@@ -15,6 +15,7 @@ import time
 import logging
 import argparse
 from clint.textui import progress
+import re
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -125,6 +126,10 @@ def createFolder(userName):
     return postFolder
 
 
+def getInstaBasePostUrl():
+    return "https://www.instagram.com/p/"
+
+
 def getInstaUserName():
     return readProperty("INSTA_USER_NAME")
 
@@ -194,18 +199,41 @@ def requestUrlNormal(url, retries=1):
         retrySameUrl(url, retries)
 
 
+def isUserPostHasMultiple(post):
+    if post['__typename'] == "GraphSidecar":
+        return True
+    else:
+        return False
+
+
 # Downloading the user videos is not straight forward.
 # We need to extract it from the post
-def downloadVideoFromInstapost(url):
-    embedInstaPageResponse = requestUrl(url)
-    soup = BeautifulSoup(embedInstaPageResponse.text, 'html.parser')
+def downloadVideoFromInstapost(url, postFileName):
+    response = requestUrl(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
     post_url = soup.find("meta", property="og:video:secure_url")['content']
     if post_url:
-        postResponse = requestUrl(post_url)
-        return postResponse
-    else:
-        return embedInstaPageResponse
+        requestAndSaveUrlInChunk(post_url, postFileName)
+        
 
+# Downloading a post with multiple medias is not straight forward.
+# We need to extract it from the post
+def downloadMultipleMediaFromInstapost(url, postFileName):
+    embedInstaPageResponse = requestUrl(url)
+    soup = BeautifulSoup(embedInstaPageResponse.text, 'html.parser')
+    script_tag = soup.find('script', text=re.compile('window\._sharedData'))
+    shared_data = script_tag.string.partition('=')[-1].strip(' ;')
+    json_object = json.loads(shared_data)
+    page = json_object['entry_data']['PostPage'][0]
+    sideCars = page['graphql']['shortcode_media']['edge_sidecar_to_children']
+    links = sideCars['edges']
+    counter = 0
+    for link in links:
+        img_url = link['node']['display_url']
+        fileName = postFileName + str(counter) + ".jpeg"
+        requestAndSaveUrlInChunk(img_url, fileName)
+        counter = counter + 1
+    
 
 def getPostCountToDownload(totalNumberOfposts):
     postCountToDownload = int(input(
@@ -222,6 +250,17 @@ def getStartingPointForUserpostDownload():
         return int(postCountToDownload)
     else:
         return 1
+
+
+def requestAndSaveUrlInChunk(url, postFileName):
+    response = requestUrl(url)
+    with open(postFileName, 'wb') as f:
+        total_length = int(response.headers.get('content-length'))
+        for chunk in progress.bar(response.iter_content(
+                chunk_size=1024), expected_size=(total_length / 1024) + 1):
+            if chunk:
+                f.write(chunk)
+                f.flush()
 
 
 def downloadUserposts(instaLoggedIn=False):
@@ -290,6 +329,7 @@ def downloadUserposts(instaLoggedIn=False):
             shortPostCode = post['node']['shortcode']
             display_url = post['node']['display_url']
             isItAVideo = isUserPostAVideo(post['node'])
+            isItMultipleMedia = isUserPostHasMultiple(post['node'])
 
             if isItAVideo:
                 postFileName = folderName + "/" + shortPostCode + ".mp4"
@@ -304,22 +344,18 @@ def downloadUserposts(instaLoggedIn=False):
                 print("Skipped. Already downloaded post")
                 continue
 
-            if isItAVideo:
-                intermediateInstaUrl = "https://www.instagram.com/p/" + shortPostCode
-                response = downloadVideoFromInstapost(intermediateInstaUrl)
-            else:
-                response = requestUrl(display_url)
+            downloadCount = downloadCount + 1
+            postUrl = getInstaBasePostUrl() + shortPostCode
 
-            with open(postFileName, 'wb') as f:
-                downloadCount = downloadCount + 1
-                total_length = int(response.headers.get('content-length'))
-                for chunk in progress.bar(response.iter_content(
-                        chunk_size=1024), expected_size=(total_length / 1024) + 1):
-                    if chunk:
-                        f.write(chunk)
-                        f.flush()
-                print("Download and saved post number: " +
-                      str(downloadCount))
+            if isItAVideo:
+                downloadVideoFromInstapost(postUrl, postFileName)
+            elif isItMultipleMedia:
+                fileName = folderName + "/" + shortPostCode
+                downloadMultipleMediaFromInstapost(postUrl, fileName)
+            else:
+                requestAndSaveUrlInChunk(display_url, postFileName)
+
+            print("Downloaded and saved post number: " + str(downloadCount))
 
             if (downloadCount >= postCountToDownload):
                 print("\nCompleted. Downloaded " +
