@@ -1,4 +1,4 @@
-# Instagram-Photo-Scraper
+# Instagram-Posts-Scraper
 
 Downloads most recent posts (both photos and videos) for a username or hashtag. Be polite with # number of downloads, don't to overuse so that Instagram removes/changes their open APIs (again) or restrict your IP. 
 
