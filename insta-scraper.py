@@ -14,6 +14,7 @@ from instalog import InstaLogin
 import time
 import logging
 import argparse
+from clint.textui import progress
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -143,7 +144,7 @@ def retrySameUrl(url, retries):
 # This is the common method for sending a Url request
 def requestUrlWithoutLogin(url, retries=1):
     try:
-        response = requests.get(url, headers={
+        response = requests.get(url, stream=True, headers={
                                 'User-Agent': 'Mozilla/5.0 (Macintosh;'
                                 'Intel Mac OS X 10_9_3) AppleWebKit/537.36'
                                 '(KHTML, like Gecko) Chrome/35.0.1916.47'
@@ -151,7 +152,7 @@ def requestUrlWithoutLogin(url, retries=1):
         responseCode = response.status_code
 
         if responseCode != 200:
-            logging.info("\nError:"+str(responseCode))
+            logging.info("\nError:" + str(responseCode))
             logging.debug("Request returned a " + str(responseCode) + "\n")
             retrySameUrl(url, retries)
         else:
@@ -168,7 +169,7 @@ def requestUrlWithoutLogin(url, retries=1):
 def requestUrlNormal(url, retries=1):
     try:
         cookies = getCookies()
-        response = requests.get(url, cookies=cookies, headers={
+        response = requests.get(url, stream=True, cookies=cookies, headers={
                                 'User-Agent': 'Mozilla/5.0 (Macintosh;'
                                 'Intel Mac OS X 10_9_3) AppleWebKit/537.36'
                                 '(KHTML, like Gecko) Chrome/35.0.1916.47'
@@ -204,7 +205,7 @@ def downloadInstaPhoto(url):
 
 def getPhotoCountToDownload(totalNumberOfPhotos):
     photoCountToDownload = int(input(
-        'How many photos should we download? '))
+        'How many posts should we download? '))
     if totalNumberOfPhotos < photoCountToDownload:
         photoCountToDownload = totalNumberOfPhotos
     return photoCountToDownload
@@ -212,7 +213,7 @@ def getPhotoCountToDownload(totalNumberOfPhotos):
 
 def getStartingPointForUserPhotoDownload():
     photoCountToDownload = input(
-        'From which photo should we start the download ')
+        'From which post should we start the download ')
     if photoCountToDownload:
         return int(photoCountToDownload)
     else:
@@ -248,7 +249,7 @@ def downloadUserPhotos(instaLoggedIn=False):
     downloadCount = 0
     photoCountToDownload = 0
 
-    print("\nDownloading Instagram Photos for "
+    print("\nDownloading Instagram posts for "
           + userFullName)
     # Loop to go through call by call to fetch next 12 photos of the user.
     # Each call will reveal whether more photos are left to retrive
@@ -263,7 +264,7 @@ def downloadUserPhotos(instaLoggedIn=False):
 
         if photoCountToDownload == 0:
             print("This account has a total of " +
-                  str(totalNumberOfPhotos) + " photos")
+                  str(totalNumberOfPhotos) + " posts")
             photoCountToDownload = getPhotoCountToDownload(totalNumberOfPhotos)
             startingPoint = getStartingPointForUserPhotoDownload()
 
@@ -271,38 +272,44 @@ def downloadUserPhotos(instaLoggedIn=False):
             hasMorePhotos = False
 
         if startingPoint > len(userPosts):
-            instaDataUrl = getBaseUrlForUserPhotos(userId) + "&after=" + endCursor
+            instaDataUrl = getBaseUrlForUserPhotos(
+                userId) + "&after=" + endCursor
             startingPoint = startingPoint - len(userPosts)
             continue
 
         print("\nWe have currently downloaded " + str(downloadCount) +
-              " photos and plan to download " + str(photoCountToDownload))
+              " posts and plan to download " + str(photoCountToDownload))
         print("We have " + str(photoCountToDownload - downloadCount) +
-              " more photos to download\n")
+              " more posts to download\n")
 
         for post in userPosts:
             shortImageName = post['node']['shortcode']
             display_url = post['node']['display_url']
+            contentType = post['node']['__typename']
             response = requestUrl(display_url)
-            imageFileName = folderName + "/" + shortImageName + ".jpeg"
+            print(contentType)
+            if contentType == "GraphVideo":
+                imageFileName = folderName + "/" + shortImageName + ".mp4"
+            else:
+                imageFileName = folderName + "/" + shortImageName + ".jpeg"
 
             if startingPoint > 1:
                 startingPoint = startingPoint - 1
                 continue
 
             if os.path.isfile(imageFileName):
-                print("Skipped. Already downloaded photo")
+                print("Skipped. Already downloaded post")
                 continue
 
             with open(imageFileName, 'wb') as f:
                 downloadCount = downloadCount + 1
                 f.write(response.content)
                 f.close()
-                print("Download and saved photo number: " + str(downloadCount))
+                print("Download and saved post number: " + str(downloadCount))
 
             if (downloadCount >= photoCountToDownload):
                 print("\nCompleted. Downloaded " +
-                      str(downloadCount) + " photos of " + userFullName + "\n")
+                      str(downloadCount) + " posts of " + userFullName + "\n")
                 sys.exit()
 
         instaDataUrl = getBaseUrlForUserPhotos(userId) + "&after=" + endCursor
@@ -368,6 +375,36 @@ def getHashTagImageElements(section):
         sys.exit()
 
 
+def isItAVideo(image):
+    if getRunType() == RUN_TYPES.NORMAL:
+        if str(image['media']['media_type']) == "2":
+            return True
+        else:
+            return False
+    elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        if image['node']['__typename'] == "GraphVideo":
+            return True
+        else:
+            return False
+    else:
+        logging.info("Not Supported this Run Type")
+        sys.exit()
+
+
+def getVideoLink(image):
+    if getRunType() == RUN_TYPES.NORMAL:
+        media = image['media']
+        if media.get('video_versions'):
+            return media['video_versions'][0]['url']
+        else:
+            return media['carousel_media'][0]['video_versions'][0]['url']
+    elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        return image['node']['display_url']
+    else:
+        logging.info("Not Supported this Run Type")
+        sys.exit()
+
+
 def getImageLink(image):
     if getRunType() == RUN_TYPES.NORMAL:
         media = image['media']
@@ -423,7 +460,7 @@ def downloadHashTagPhotos(instaLoggedIn=False):
     folderName = createFolder("#" + hashTag)
 
     print("\nDownloading " + category +
-          " Instagram Photos for #" + hashTag)
+          " Instagram Posts for #" + hashTag)
 
     hashTagDataUrl = getBaseUrlForHashTags(hashTag)
 
@@ -435,7 +472,7 @@ def downloadHashTagPhotos(instaLoggedIn=False):
         posts = getHashTagPosts(hashTagData, category)
         hasMorePhotos = hasMorePhotosToDownload(posts)
         if not hasMorePhotos:
-            logging.info("No images found for the #" + hashTag)
+            logging.info("No posts found for the #" + hashTag)
             break
         endCursor = getEndCursor(posts)
         sections = getSections(posts)
@@ -447,39 +484,51 @@ def downloadHashTagPhotos(instaLoggedIn=False):
 
         if category == "top":
             print("Downloading the top " + str(len(images))
-                  + " photos for #" + hashTag)
+                  + " posts for #" + hashTag)
             photoCountToDownload = len(images)
         else:
             if photoCountToDownload == 0:
                 print("This hashtag has a total of " +
-                      str(totalPhotoCount) + " photos")
+                      str(totalPhotoCount) + " posts")
                 photoCountToDownload = getPhotoCountToDownload(totalPhotoCount)
 
             print("\nWe have currently downloaded " + str(downloadCount) +
-                  " photos and plan to download " + str(photoCountToDownload))
+                  " posts and plan to download " + str(photoCountToDownload))
             print("We have " + str(photoCountToDownload - downloadCount) +
-                  " more photos to download\n")
+                  " more posts to download\n")
 
         for image in images:
-            mediaLink = getImageLink(image)
-            response = requestUrl(mediaLink)
+
+            if isItAVideo(image):
+                mediaLink = getVideoLink(image)
+                filetype = ".mp4"
+            else:
+                mediaLink = getImageLink(image)
+                filetype = ".jpeg"
+
             shortImageName = getImageCode(image)
-            imageFileName = folderName + "/" + shortImageName + ".jpeg"
+            imageFileName = folderName + "/" + shortImageName + filetype
 
             if os.path.isfile(imageFileName):
-                print("Skipped. Already downloaded photo")
+                print("Skipped. Already downloaded post")
                 continue
 
+            response = requestUrl(mediaLink)
+    
             with open(imageFileName, 'wb') as f:
                 downloadCount = downloadCount + 1
-                f.write(response.content)
-                f.close()
-                print("Download and saved photo number: " +
+                total_length = int(response.headers.get('content-length'))
+                for chunk in progress.bar(response.iter_content(
+                        chunk_size=100), expected_size=(total_length / 100) + 1):
+                    if chunk:
+                        f.write(chunk)
+                        f.flush()
+                print("Download and saved post number: " +
                       str(downloadCount))
 
             if (downloadCount >= photoCountToDownload):
                 print("\nCompleted. Downloaded " +
-                      str(downloadCount) + " of #" + hashTag + "\n")
+                      str(downloadCount) + " posts of #" + hashTag + "\n")
                 sys.exit()
 
         hashTagDataUrl = getBaseUrlForHashTags(
@@ -494,8 +543,8 @@ if getRunType() == RUN_TYPES.NORMAL:
 
 # We provide options
 print("\nWhat should we download today?\n")
-print("     1. Photos from an Instagram Account")
-print("     2. Photos from an Instagram Hashtag\n")
+print("     1. Posts from an Instagram Account")
+print("     2. Posts from an Instagram Hashtag\n")
 userChoice = input('Enter your choice: ') or "1"
 
 if userChoice == "1":
