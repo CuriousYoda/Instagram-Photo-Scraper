@@ -27,7 +27,7 @@ Downloads most recent posts (both photos and videos) for a username or hashtag. 
 - Support for proxy solution
 
 ## Screenshots
-Downloading recent images for a hashtag
+Downloading recent posts for a hashtag
 
 ![image](https://user-images.githubusercontent.com/86459866/124739618-a9ce5880-df37-11eb-96ce-8fb8c9420067.png)
 
