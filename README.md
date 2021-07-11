@@ -1,11 +1,11 @@
 # Instagram-Photo-Scraper
 
-Downloads most recent images for a username or hashtag. Be polite with # number of downloads, don't to overuse so that Instagram removes/changes their open APIs (again) or restrict your IP. 
+Downloads most recent posts (both photos and videos) for a username or hashtag. Be polite with # number of downloads, don't to overuse so that Instagram removes/changes their open APIs (again) or restrict your IP. 
 
 ## Features
-- Takes a Instagram user name and downloads X photos starting from most recent ones
-  - You can define how many photos to be downloaded
-- Takes a Instagram Hash Tag and downloads the top photos or X photos posted recently
+- Takes a Instagram user name and downloads X posts starting from most recent ones
+  - You can define how many posts to be downloaded
+- Takes a Instagram Hash Tag and downloads the top posts or X posts posted recently
 - Works with few different run types
   - Run_TYPE 1 - Works with authenticated calls. You need a instagram user name and password for this. Be polite, otherwise Instagram will restrict your account. 
   - RUN_TYPE 2 - Through Proxy (temporarily not supported)
@@ -18,7 +18,7 @@ Downloads most recent images for a username or hashtag. Be polite with # number 
   - Set up your instagram user name and password in the properties file.
 - Set up the folder path to download images in the properties file
 - Run the insta-scraper.exe either by double clicking or by opening CMD prompt and typing "insta-scraper.exe"
-- Photos will be downloaded to the folder you specified. User photos will be saved to a folder name with User Full Name and Hashtag photos to a folder named with that hashtag
+- Posts will be downloaded to the folder you specified. User posts will be saved to a folder name with User Full Name and Hashtag posts to a folder named with that hashtag
 
 ## Development & Packaging
 - PyInstaller is used to package the exe file
