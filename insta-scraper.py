@@ -575,7 +575,11 @@ def downloadHashTagPosts(instaLoggedIn=False):
             shortPostCode = getPostShortCode(post)
             postFileName = folderName + "/" + shortPostCode + "@" + userName + filetype
 
-            requestAndSaveUrlInChunk(mediaLink, postFileName) 
+            if isVideo:
+                postUrl = getInstaBasePostUrl() + shortPostCode
+                downloadVideoFromInstapost(postUrl, postFileName)
+            else:        
+                requestAndSaveUrlInChunk(mediaLink, postFileName) 
 
             downloadCount = downloadCount + 1
             print("Download and saved post number: " + str(downloadCount))
