@@ -211,17 +211,21 @@ def isUserPostHasMultiple(post):
 def downloadVideoFromInstapost(url, postFileName):
     response = requestUrl(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    post_url = soup.find("meta", property="og:video:secure_url")['content']
+    script_tag = soup.find('script', text=re.compile('window\\._sharedData'))
+    shared_data = script_tag.string.partition('=')[-1].strip(' ;')
+    json_object = json.loads(shared_data)
+    page = json_object['entry_data']['PostPage'][0]
+    post_url = page['graphql']['shortcode_media']['video_url']
     if post_url:
         requestAndSaveUrlInChunk(post_url, postFileName)
-        
+
 
 # Downloading a post with multiple medias is not straight forward.
 # We need to extract it from the post
 def downloadMultipleMediaFromInstapost(url, postFileName):
     embedInstaPageResponse = requestUrl(url)
     soup = BeautifulSoup(embedInstaPageResponse.text, 'html.parser')
-    script_tag = soup.find('script', text=re.compile('window\._sharedData'))
+    script_tag = soup.find('script', text=re.compile('window\\._sharedData'))
     shared_data = script_tag.string.partition('=')[-1].strip(' ;')
     json_object = json.loads(shared_data)
     page = json_object['entry_data']['PostPage'][0]
@@ -233,7 +237,7 @@ def downloadMultipleMediaFromInstapost(url, postFileName):
         fileName = postFileName + str(counter) + ".jpeg"
         requestAndSaveUrlInChunk(img_url, fileName)
         counter = counter + 1
-    
+
 
 def getPostCountToDownload(totalNumberOfposts):
     postCountToDownload = int(input(
@@ -455,7 +459,7 @@ def getVideoLink(post):
         sys.exit()
 
 
-def getpostLink(post):
+def getImageLink(post):
     if getRunType() == RUN_TYPES.NORMAL:
         media = post['media']
         if media.get('image_versions2'):
@@ -558,42 +562,31 @@ def downloadHashTagPosts(instaLoggedIn=False):
                   " more posts to download\n")
 
         for post in posts:
+            isVideo = isItAVideo(post)
 
-            if isItAVideo(post):
+            if isVideo:
                 mediaLink = getVideoLink(post)
                 filetype = ".mp4"
             else:
-                mediaLink = getpostLink(post)
+                mediaLink = getImageLink(post)
                 filetype = ".jpeg"
 
             userName = getPostOwnerId(post)
             shortPostCode = getPostShortCode(post)
             postFileName = folderName + "/" + shortPostCode + "@" + userName + filetype
 
-            if os.path.isfile(postFileName):
-                print("Skipped. Already downloaded post")
-                continue
+            requestAndSaveUrlInChunk(mediaLink, postFileName) 
 
-            response = requestUrl(mediaLink)
-
-            with open(postFileName, 'wb') as f:
-                downloadCount = downloadCount + 1
-                total_length = int(response.headers.get('content-length'))
-                for chunk in progress.bar(response.iter_content(
-                        chunk_size=1024), expected_size=(total_length / 1024) + 1):
-                    if chunk:
-                        f.write(chunk)
-                        f.flush()
-                print("Download and saved post number: " +
-                      str(downloadCount))
+            downloadCount = downloadCount + 1
+            print("Download and saved post number: " + str(downloadCount))
 
             if (downloadCount >= postCountToDownload):
                 print("\nCompleted. Downloaded " +
                       str(downloadCount) + " posts of #" + hashTag + "\n")
                 sys.exit()
 
-        hashTagDataUrl = getBaseUrlForHashTags(
-            hashTag) + "&max_id=" + endCursor
+        maxIdAppender = "&max_id=" + endCursor
+        hashTagDataUrl = getBaseUrlForHashTags(hashTag) + maxIdAppender
 
 
 # With RunType 1, we make authenticated calls. So as the first step, we login
