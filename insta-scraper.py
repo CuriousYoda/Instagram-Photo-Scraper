@@ -235,7 +235,7 @@ def downloadMultipleMediaFromInstapost(url, postFileName):
 
 def getTargetDownloadCount(totalPostCount):
     targetPostCount = int(input(
-        'How many posts should we download? '))
+        'Number of posts to download: '))
     if totalPostCount < targetPostCount:
         targetPostCount = totalPostCount
     return targetPostCount
@@ -243,7 +243,8 @@ def getTargetDownloadCount(totalPostCount):
 
 def getStartingPointForUserpostDownload():
     targetPostCount = input(
-        'From which post should we start the download ')
+        'Start from (keep empty to start from the beginning): ')
+    print("")
     if targetPostCount:
         return int(targetPostCount)
     else:
@@ -597,7 +598,7 @@ def downloadUserposts(instaLoggedIn=False):
         print("No posts for this account")
         sys.exit()
 
-    print("This account has " + str(totalPostCount) + " posts")
+    print("This account has " + str(totalPostCount) + " posts\n")
     targetPostCount = getTargetDownloadCount(totalPostCount)
     startingPoint = getStartingPointForUserpostDownload()
     folderName = createFolder(userFullName)
@@ -617,7 +618,7 @@ def downloadUserposts(instaLoggedIn=False):
             state = procesUserPost(post, folderName)
             if state:
                 downloadCount = downloadCount + 1
-                print("Downloaded and saved post number: " + str(downloadCount))
+                print("Saved post number: " + str(downloadCount))
 
             if (downloadCount >= targetPostCount):
                 print("\nCompleted.")
@@ -641,10 +642,10 @@ if getRunType() == RUN_TYPES.NORMAL:
     instaLoggedIn = InstaLogin(getInstaUserName(), getInstaPassword()).login
 
 # We provide options
-print("\nWhat should we download today?\n")
-print("     1. Posts from an Instagram Account")
-print("     2. Posts from an Instagram Hashtag\n")
-userChoice = input('Enter your choice: ') or "1"
+print("\nDownload posts from a")
+print("\t1. Instagram Account")
+print("\t2. Hashtag\n")
+userChoice = input('Enter (1 or 2): ') or "1"
 
 if userChoice == "1":
     downloadUserposts(instaLoggedIn)
