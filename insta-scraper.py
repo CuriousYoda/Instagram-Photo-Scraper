@@ -501,8 +501,9 @@ def downloadHashTagPosts(instaLoggedIn=False):
     hashTag = input('\nHashTag: #') or "instagram"
 
     # There are two categroy of posts for a hashtag. Top or Most recent
-    print('\nWhich category to download')
-    categoryInput = input('\t1:Top Posts or\n\t2:Recent Posts\n')
+    print('\nCategory')
+    print('\t1:Top Posts or\n\t2:Recent Posts')
+    categoryInput = input("Input: ")
     category = getCategory(categoryInput)
 
     # We have not started downloading yet, so these values are set to 0
@@ -514,7 +515,7 @@ def downloadHashTagPosts(instaLoggedIn=False):
         print("No posts for the hashtag #" + hashTag)
         sys.exit()
 
-    folderName = createFolder(hashTag)
+    folderName = createFolder("#" + hashTag)
     targetCount = getCountForDownloadCategory(category, hashTagData)
     hashTagPosts = getHashTagPosts(hashTagData, category)
     hasMorePosts = hasMorePostsToDownload(hashTagPosts)
@@ -642,15 +643,17 @@ if getRunType() == RUN_TYPES.NORMAL:
     instaLoggedIn = InstaLogin(getInstaUserName(), getInstaPassword()).login
 
 # We provide options
-print("\nDownload posts from a")
-print("\t1. Instagram Account")
-print("\t2. Hashtag\n")
-userChoice = input('Enter (1 or 2): ') or "1"
+while True:
+    print("\nDownload posts from a")
+    print("\t1. Instagram Account or")
+    print("\t2. Hashtag")
+    print("\t3. Exit\n")
+    userChoice = input('Input: ') or "1"
 
-if userChoice == "1":
-    downloadUserposts(instaLoggedIn)
-elif userChoice == "2":
-    downloadHashTagPosts(instaLoggedIn)
-else:
-    logging.info("Invalid Option. App terminated")
-    sys.exit()
+    if userChoice == "1":
+        downloadUserposts(instaLoggedIn)
+    elif userChoice == "2":
+        downloadHashTagPosts(instaLoggedIn)
+    else:
+        logging.info("Instagram Scraper terminated.")
+        sys.exit()
