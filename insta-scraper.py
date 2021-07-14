@@ -55,12 +55,12 @@ def getCookies():
     return cookies
 
 
-def requestUrl(url, retries=1):
+def requestUrl(url, retries=1, user_agent=""):
     runType = getRunType()
     if runType == RUN_TYPES.WITHOUT_LOGIN:
-        return requestUrlWithoutLogin(url, retries)
+        return requestUrlWithoutLogin(url, retries, user_agent)
     else:
-        return requestUrlNormal(url, retries)
+        return requestUrlNormal(url, retries, user_agent)
 
 
 def isAJsonResponse(responseType):
@@ -151,13 +151,17 @@ def retrySameUrl(url, retries):
 
 
 # This is the common method for sending a Url request
-def requestUrlWithoutLogin(url, retries=1):
+def requestUrlWithoutLogin(url, retries=1, user_agent=""):
     try:
+        if not user_agent:
+            user_agent = readProperty("USER_AGENT")
         response = requests.get(url, stream=True, headers={
-                                'User-Agent': 'Mozilla/5.0 (Macintosh;'
-                                'Intel Mac OS X 10_9_3) AppleWebKit/537.36'
-                                '(KHTML, like Gecko) Chrome/35.0.1916.47'
-                                'Safari/537.36'})
+                                'User-Agent': user_agent})
+
+        if len(response.history) > 1:
+            if response.history[0].status_code == 302:
+                print("IP is restricted. Try again after few hours.")
+                sys.exit()
 
         return response
     except Exception as e:
@@ -169,14 +173,13 @@ def requestUrlWithoutLogin(url, retries=1):
 
 
 # This is the common method for sending a Url request
-def requestUrlNormal(url, retries=1):
+def requestUrlNormal(url, retries=1, user_agent=""):
     try:
+        if not user_agent:
+            user_agent = readProperty("USER_AGENT")
         cookies = getCookies()
         response = requests.get(url, stream=True, cookies=cookies, headers={
-                                'User-Agent': 'Mozilla/5.0 (Macintosh;'
-                                'Intel Mac OS X 10_9_3) AppleWebKit/537.36'
-                                '(KHTML, like Gecko) Chrome/35.0.1916.47'
-                                'Safari/537.36'})
+                                'User-Agent': user_agent})
 
         return response
     except Exception as e:
@@ -415,6 +418,14 @@ def getCountForDownloadCategory(category, posts):
     return targetCount
 
 
+def getUserNameFromUserId(userId):
+    user_agent = readProperty("USER_AGENT1")
+    url = "https://i.instagram.com/api/v1/users/" + userId + "/info/"
+    response = requestUrl(url, 1, user_agent)
+    json_object = json.loads(response.text)
+    return json_object['user']['username']
+
+
 def getFileName(post):
     isVideo = isItAVideo(post)
 
@@ -423,10 +434,11 @@ def getFileName(post):
     else:
         filetype = ".jpeg"
 
-    userName = getPostOwnerId(post)
+    userId = getPostOwnerId(post)
+    userName = getUserNameFromUserId(userId)
     shortPostCode = getPostShortCode(post)
 
-    fileName = shortPostCode + "@" + userName + filetype
+    fileName = userName + "@" + shortPostCode + filetype
     return fileName
 
 
@@ -581,7 +593,7 @@ def downloadUserposts(instaLoggedIn=False):
     # It also has an end_cursor,
     # which we can use to query for the next pictures
     instaDataUrl = getBaseUrlForUserposts(userId)
-
+    print(instaDataUrl)
     # we haven't started downloading yet. So these values are set to 0
     downloadCount = 0
     targetPostCount = 0
@@ -636,24 +648,30 @@ def downloadUserposts(instaLoggedIn=False):
         numberOfPosts = len(userPosts)
 
 
-# With RunType 1, we make authenticated calls. So as the first step, we login
-# to the instagram and save our client cookies to be used in future calls
-instaLoggedIn = False
-if getRunType() == RUN_TYPES.NORMAL:
-    instaLoggedIn = InstaLogin(getInstaUserName(), getInstaPassword()).login
+def main():
+    # With RunType 1, we make authenticated calls. So as the first step, we login
+    # to the instagram and save our client cookies to be used in future calls
+    instaLoggedIn = False
+    if getRunType() == RUN_TYPES.NORMAL:
+        instaLoggedIn = InstaLogin(
+            getInstaUserName(),
+            getInstaPassword()).login
 
-# We provide options
-while True:
-    print("\nDownload posts from a")
-    print("\t1. Instagram Account or")
-    print("\t2. Hashtag")
-    print("\t3. Exit\n")
-    userChoice = input('Input: ') or "1"
+    # We provide options
+    while True:
+        print("\nDownload posts from a")
+        print("\t1. Instagram Account or")
+        print("\t2. Hashtag")
+        print("\t3. Exit\n")
+        userChoice = input('Input: ') or "1"
 
-    if userChoice == "1":
-        downloadUserposts(instaLoggedIn)
-    elif userChoice == "2":
-        downloadHashTagPosts(instaLoggedIn)
-    else:
-        logging.info("Instagram Scraper terminated.")
-        sys.exit()
+        if userChoice == "1":
+            downloadUserposts(instaLoggedIn)
+        elif userChoice == "2":
+            downloadHashTagPosts(instaLoggedIn)
+        else:
+            logging.info("Instagram Scraper terminated.")
+            sys.exit()
+
+
+main()
