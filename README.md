@@ -23,7 +23,11 @@ Downloads most recent posts (both photos and videos) for a username or hashtag. 
 ## Development & Packaging
 - PyInstaller is used to package the exe file
 
+## Kmown Issues
+- With RUN TYPE 3 (without credentials), it seems videos and posts with multople images are not supported
+
 ## Next Steps
+- Fix known issues
 - Support for proxy solution
 
 ## Screenshots
