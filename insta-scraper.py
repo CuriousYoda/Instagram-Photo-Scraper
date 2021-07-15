@@ -50,6 +50,12 @@ def readProperty(propertyValue):
     return value
 
 
+def getProxies():
+    httpsProxy = readProperty("HTTPS_PROXY")
+    proxies = {"https": httpsProxy}
+    return proxies
+
+
 def getCookies():
     cookies = json.load(open("cookies.txt"))
     return cookies
@@ -59,8 +65,13 @@ def requestUrl(url, retries=1, user_agent=""):
     runType = getRunType()
     if runType == RUN_TYPES.WITHOUT_LOGIN:
         return requestUrlWithoutLogin(url, retries, user_agent)
-    else:
+    elif runType == RUN_TYPES.NORMAL:
         return requestUrlNormal(url, retries, user_agent)
+    elif runType == RUN_TYPES.PROXY:
+        return requestUrlWithProxy(url, retries, user_agent)
+    else:
+        print("Define a valid RUN_TYPE. Terminated.")
+        sys.exit()
 
 
 def isAJsonResponse(responseType):
@@ -88,25 +99,19 @@ def getUserInfoRequestUrl(userName):
 
 # First call to get the basic user information such as the userId
 def getUserinfo(userName):
-    try:
-        userInfo = {}
-        userInfoRequestUrl = getUserInfoRequestUrl(userName)
-        response = requestUrl(userInfoRequestUrl)
-        responseType = response.headers.get('content-type')
-        if isAJsonResponse(responseType):
-            userInfoRequestData = json.loads(response.text)
-            userInfo = userInfoRequestData['users'][0]['user']
-        else:
-            logging.info("\nError: Try again after a while")
-            logging.debug(userInfoRequestUrl + " resulted a response type: "
-                          + responseType)
-            sys.exit()
-        return userInfo
-    except Exception as e:
-        logging.info("\nERROR in retriving basic user details")
-        logging.debug('Error on line {}'.format(sys.exc_info()
-                                                [-1].tb_lineno), type(e).__name__, e, "\n")
+    userInfo = {}
+    userInfoRequestUrl = getUserInfoRequestUrl(userName)
+    response = requestUrl(userInfoRequestUrl)
+    responseType = response.headers.get('content-type')
+    if isAJsonResponse(responseType):
+        userInfoRequestData = json.loads(response.text)
+        userInfo = userInfoRequestData['users'][0]['user']
+    else:
+        logging.info("\nError: Try again after a while")
+        logging.debug(userInfoRequestUrl + " resulted a response type: "
+                      + responseType)
         sys.exit()
+    return userInfo
 
 
 def isUserPostAVideo(post):
@@ -150,44 +155,47 @@ def retrySameUrl(url, retries):
         sys.exit()
 
 
-# This is the common method for sending a Url request
 def requestUrlWithoutLogin(url, retries=1, user_agent=""):
-    try:
-        if not user_agent:
-            user_agent = readProperty("USER_AGENT")
-        response = requests.get(url, stream=True, headers={
-                                'User-Agent': user_agent})
+    if not user_agent:
+        user_agent = readProperty("USER_AGENT")
+    response = requests.get(url, stream=True, headers={
+                            'User-Agent': user_agent})
 
-        if len(response.history) > 1:
-            if response.history[0].status_code == 302:
-                print("IP is restricted. Try again after few hours.")
-                sys.exit()
+    if len(response.history) > 1:
+        if response.history[0].status_code == 302:
+            warnIPBlocked(response.history[0])
 
-        return response
-    except Exception as e:
-        logging.info("\nERROR retrieving content")
-        logging.debug("\nERROR retrieving content" + url)
-        logging.debug('Error on line {}'.format(sys.exc_info()
-                                                [-1].tb_lineno), type(e).__name__, e, "\n")
-        retrySameUrl(url, retries)
+    return response
 
 
-# This is the common method for sending a Url request
 def requestUrlNormal(url, retries=1, user_agent=""):
-    try:
-        if not user_agent:
-            user_agent = readProperty("USER_AGENT")
-        cookies = getCookies()
-        response = requests.get(url, stream=True, cookies=cookies, headers={
-                                'User-Agent': user_agent})
+    if not user_agent:
+        user_agent = readProperty("USER_AGENT")
+    cookies = getCookies()
+    response = requests.get(url, stream=True, cookies=cookies, headers={
+                            'User-Agent': user_agent})
 
-        return response
-    except Exception as e:
-        logging.info("\nERROR retrieving content")
-        logging.debug("\nERROR: " + url)
-        logging.debug('Error on line {}'.format(sys.exc_info()
-                                                [-1].tb_lineno), type(e).__name__, e, "\n")
-        retrySameUrl(url, retries)
+    return response
+
+
+def warnIPBlocked(response):
+    status = str(response.status_code)
+    print("IP is restricted. Try again after few hours. status_code=" + status)
+    sys.exit()
+
+
+def requestUrlWithProxy(url, retries=1, user_agent=""):
+    proxies = getProxies()
+    if not user_agent:
+        user_agent = readProperty("USER_AGENT")
+    response = requests.get(url, proxies=proxies, stream=True, headers={
+                            'User-Agent': user_agent})
+    if response.status_code == 429:
+        warnIPBlocked(response)
+    if len(response.history) > 1:
+        if response.history[0].status_code == 302:
+            warnIPBlocked(response)
+    return response
 
 
 def isUserPostHasMultiple(post):
@@ -270,6 +278,8 @@ def getTotalPostCount(hashTagData):
         return hashTagData['data']['media_count']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
         return hashTagData['graphql']['hashtag']['edge_hashtag_to_media']['count']
+    elif getRunType() == RUN_TYPES.PROXY:
+        return hashTagData['graphql']['hashtag']['edge_hashtag_to_media']['count']
     else:
         logging.info("Not Supported this Run Type")
         sys.exit()
@@ -279,6 +289,8 @@ def getHashTagPosts(hashTagData, category):
     if getRunType() == RUN_TYPES.NORMAL:
         return hashTagData['data'][category]
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        return hashTagData['graphql']['hashtag']['edge_hashtag_to_media']
+    elif getRunType() == RUN_TYPES.PROXY:
         return hashTagData['graphql']['hashtag']['edge_hashtag_to_media']
     else:
         logging.info("Not Supported this Run Type")
@@ -290,6 +302,8 @@ def hasMorePostsToDownload(posts):
         return posts['more_available']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
         return posts['page_info']['has_next_page']
+    elif getRunType() == RUN_TYPES.PROXY:
+        return posts['page_info']['has_next_page']
     else:
         logging.info("Not Supported this Run Type")
         sys.exit()
@@ -299,6 +313,8 @@ def getEndCursor(posts):
     if getRunType() == RUN_TYPES.NORMAL:
         return posts['next_max_id']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        return posts['page_info']['end_cursor']
+    elif getRunType() == RUN_TYPES.PROXY:
         return posts['page_info']['end_cursor']
     else:
         logging.info("Not Supported this Run Type")
@@ -310,6 +326,8 @@ def getSections(posts):
         return posts['sections']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
         return posts['edges']
+    elif getRunType() == RUN_TYPES.PROXY:
+        return posts['edges']
     else:
         logging.info("Not Supported this Run Type")
         sys.exit()
@@ -319,6 +337,8 @@ def getHashTagPostElements(section):
     if getRunType() == RUN_TYPES.NORMAL:
         return section['layout_content']['medias']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        return [section]
+    elif getRunType() == RUN_TYPES.PROXY:
         return [section]
     else:
         logging.info("Not Supported this Run Type")
@@ -332,6 +352,11 @@ def isItAVideo(post):
         else:
             return False
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        if post['node']['__typename'] == "GraphVideo":
+            return True
+        else:
+            return False
+    elif getRunType() == RUN_TYPES.PROXY:
         if post['node']['__typename'] == "GraphVideo":
             return True
         else:
@@ -350,6 +375,8 @@ def getVideoLink(post):
             return media['carousel_media'][0]['video_versions'][0]['url']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
         return post['node']['display_url']
+    elif getRunType() == RUN_TYPES.PROXY:
+        return post['node']['display_url']
     else:
         logging.info("Not Supported this Run Type")
         sys.exit()
@@ -364,6 +391,8 @@ def getImageLink(post):
             return media['carousel_media'][0]['image_versions2']['candidates'][0]['url']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
         return post['node']['display_url']
+    elif getRunType() == RUN_TYPES.PROXY:
+        return post['node']['display_url']
     else:
         logging.info("Not Supported this Run Type")
         sys.exit()
@@ -373,6 +402,8 @@ def getPostShortCode(post):
     if getRunType() == RUN_TYPES.NORMAL:
         return post['media']['code']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        return post['node']['shortcode']
+    elif getRunType() == RUN_TYPES.PROXY:
         return post['node']['shortcode']
     else:
         logging.info("Not Supported this Run Type")
@@ -390,6 +421,8 @@ def getPostOwnerId(post):
     if getRunType() == RUN_TYPES.NORMAL:
         return post['media']['user']['username']
     elif getRunType() == RUN_TYPES.WITHOUT_LOGIN:
+        return post['node']['owner']['id']
+    elif getRunType() == RUN_TYPES.PROXY:
         return post['node']['owner']['id']
     else:
         logging.info("Not Supported this Run Type")
@@ -435,7 +468,10 @@ def getFileName(post):
         filetype = ".jpeg"
 
     userId = getPostOwnerId(post)
-    userName = getUserNameFromUserId(userId)
+    if getRunType() == RUN_TYPES.NORMAL:
+        userName = userId
+    else:
+        userName = getUserNameFromUserId(userId)
     shortPostCode = getPostShortCode(post)
 
     fileName = userName + "@" + shortPostCode + filetype
