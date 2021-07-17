@@ -581,7 +581,7 @@ def downloadHashTagPosts(instaLoggedIn=False):
     print("No more posts for the hashtag #" + hashTag)
 
 
-def procesUserPost(post, folderName):
+def saveUserPost(post, folderName):
     shortPostCode = post['node']['shortcode']
     display_url = post['node']['display_url']
     isItAVideo = isUserPostAVideo(post['node'])
@@ -605,8 +605,16 @@ def procesUserPost(post, folderName):
         return downloadMultipleMediaFromInstapost(postUrl, fileName)
     else:
         requestAndSaveUrlInChunk(display_url, postFileName)
-
     return True
+
+
+def processUserPostBatch(userPosts, folderName, count):
+    for post in userPosts:
+        saved = saveUserPost(post, folderName)
+        if saved:
+            count = count + 1
+            print("Saved post: " + str(count))
+    return count
 
 
 def downloadUserposts(instaLoggedIn=False):
@@ -629,11 +637,8 @@ def downloadUserposts(instaLoggedIn=False):
     # It also has an end_cursor,
     # which we can use to query for the next pictures
     instaDataUrl = getBaseUrlForUserposts(userId)
-    print(instaDataUrl)
-    # we haven't started downloading yet. So these values are set to 0
-    downloadCount = 0
-    targetPostCount = 0
-
+   
+    count = 0
     print("\nDownloading posts for " + userFullName)
 
     userMedia = getUserMedia(instaDataUrl)
@@ -648,32 +653,14 @@ def downloadUserposts(instaLoggedIn=False):
         sys.exit()
 
     print("This account has " + str(totalPostCount) + " posts\n")
-    targetPostCount = getTargetDownloadCount(totalPostCount)
-    startingPoint = getStartingPointForUserpostDownload()
+    postsToDownload = getTargetDownloadCount(totalPostCount)
     folderName = createFolder(userFullName)
 
-    while hasMorePosts:
+    if len(userPosts) > postsToDownload:
+        userPosts = userPosts[:postsToDownload]
+    count = processUserPostBatch(userPosts, folderName, count)
 
-        if startingPoint > numberOfPosts:
-            instaDataUrl = getBaseUrlForUserposts(userId) + urlAppender
-            startingPoint = startingPoint - numberOfPosts
-            continue
-
-        for post in userPosts:
-            if startingPoint > 1:
-                startingPoint = startingPoint - 1
-                continue
-
-            state = procesUserPost(post, folderName)
-            if state:
-                downloadCount = downloadCount + 1
-                print("Saved post number: " + str(downloadCount))
-
-            if (downloadCount >= targetPostCount):
-                print("\nCompleted.")
-                print("Downloaded " + str(downloadCount) + " posts.\n")
-                sys.exit()
-
+    while hasMorePosts and postsToDownload > count:
         endCursor = getEndCursorForUserPosts(userMedia)
         urlAppender = "&after=" + endCursor
         instaDataUrl = getBaseUrlForUserposts(userId) + urlAppender
@@ -682,6 +669,15 @@ def downloadUserposts(instaLoggedIn=False):
         hasMorePosts = hasMoreUserPosts(userMedia)
         totalPostCount = userMedia['count']
         numberOfPosts = len(userPosts)
+        remainingCount = postsToDownload - count
+        
+        if numberOfPosts > remainingCount:
+            userPosts = userPosts[:remainingCount]
+        count = processUserPostBatch(userPosts, folderName, count)
+
+        if count >= postsToDownload:
+            print("\nDownload completed.")
+            break
 
 
 def main():
