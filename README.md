@@ -50,7 +50,7 @@ $ python insta-scraper.py
 ## Screenshots
 Downloading recent posts for a hashtag
 
-![image](https://user-images.githubusercontent.com/86459866/124739618-a9ce5880-df37-11eb-96ce-8fb8c9420067.png)
+![clip2](https://user-images.githubusercontent.com/86459866/126743888-3d03d8b5-a586-46e7-b2e4-a4e5a43accd8.gif))
 
 
 
