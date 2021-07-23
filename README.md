@@ -23,16 +23,22 @@ $ cd Instagram-Posts-Scraper
 $ pip3 install -r requirements.txt
 ```
 
-## Required Proprties
+## Required Properties
 - Set up the RUN TYPE in the properties file. Default is RUN TYPE 3, which requires no user name or password for Instagram. However, this run type might have limitations on number of posts which can be downloader.
 - If you use RUN TYPE 1
   - Set up your instagram user name and password in the properties file. Be polite with downloads. Otherwise, Instagram will restrict your account. 
 - Set up the folder path to download images in the properties file
-- Run the insta-scraper.exe either by double clicking or by opening CMD prompt and typing "insta-scraper.exe"
 - User posts will be saved to a folder name with User Full Name and Hashtag posts to a folder named with that hashtag
 
-## Development & Packaging
-- PyInstaller is used to package the exe file
+## Usage
+```
+# With exe (Only for Windows systems)
+$ Double click on exe or Open a CMD prompt and run "insta-scraper.exe"
+
+# Through script
+$ python insta-scraper.py
+
+```
 
 ## Known Issues
 
