@@ -34,8 +34,8 @@ $ pip3 install -r requirements.txt
 ## Development & Packaging
 - PyInstaller is used to package the exe file
 
-## Kmown Issues
-- 
+## Known Issues
+
 
 ## Next Steps
 - Fix known issues
