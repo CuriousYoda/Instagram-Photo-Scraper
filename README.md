@@ -11,20 +11,31 @@ Downloads most recent posts (both photos and videos) for a username or hashtag. 
   - RUN_TYPE 2 - Through Proxy (temporarily not supported)
   - RUN_TYPE 3 - Without login, and through regular internet connection. We recommend this one. However, be polite with your downloads, otherwise your IP might be blocked by Instagram.
 
-## How to use
-- Download the project as a zip file (it's around 11MB), unzip and go into the folder.
-- Set up the RUN TYPE in the properties file. Default is RUN TYPE 3, which requires no user name or password for Instagram
+## Git Installtion
+```
+# clone the repo
+$ git clone https://github.com/CuriousYoda/Instagram-Posts-Scraper.git
+
+# change the working directory to Facebook-Video-Downloader
+$ cd Instagram-Posts-Scraper
+
+# install the requirements
+$ pip3 install -r requirements.txt
+```
+
+## Required Proprties
+- Set up the RUN TYPE in the properties file. Default is RUN TYPE 3, which requires no user name or password for Instagram. However, this run type might have limitations on number of posts which can be downloader.
 - If you use RUN TYPE 1
-  - Set up your instagram user name and password in the properties file.
+  - Set up your instagram user name and password in the properties file. Be polite with downloads. Otherwise, Instagram will restrict your account. 
 - Set up the folder path to download images in the properties file
 - Run the insta-scraper.exe either by double clicking or by opening CMD prompt and typing "insta-scraper.exe"
-- Posts will be downloaded to the folder you specified. User posts will be saved to a folder name with User Full Name and Hashtag posts to a folder named with that hashtag
+- User posts will be saved to a folder name with User Full Name and Hashtag posts to a folder named with that hashtag
 
 ## Development & Packaging
 - PyInstaller is used to package the exe file
 
 ## Kmown Issues
-- With RUN TYPE 3 (without credentials), it seems videos and posts with multople images are not supported
+- 
 
 ## Next Steps
 - Fix known issues
